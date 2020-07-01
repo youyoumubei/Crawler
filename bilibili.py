@@ -153,9 +153,11 @@ class BiliSpider:
                        random_state=15)
         # jieba分词，形成有空格的字符串
         word_list = []
+        stop_words = set(line.strip() for line in open('./WordLibrary/baidu_stopwords.txt', encoding='utf - 8'))
         word_generator = jieba.cut(text_all, cut_all=False)
         for word in word_generator:
-            word_list.append(word)
+            if word not in stop_words:
+                word_list.append(word)
         text = ' '.join(word_list)
         wc.generate(text)
         plt.figure(figsize=(20, 10))
@@ -181,6 +183,16 @@ class BiliSpider:
         cid_list = [int(x) for x in cid_list]
         del cid_list[len(cid_list) - 1]
         return cid_list
+    def draw_picture(self,score_df):
+        # score_df.plot()
+        score_df.plot(kind='hist', color='c')
+        plt.ylabel('')
+        plt.xlabel('Sentiment score')
+        plt.xlim(-6, 6)
+        plt.grid(True, linestyle='--')
+        results_name = "./AnalysisResults/" + self.BV + "_analysis_result.jpg"
+        plt.savefig(results_name)
+        plt.show()
 
     def run(self):
         # 视频弹幕处理逻辑BV
@@ -196,8 +208,10 @@ class BiliSpider:
             # 5.绘制词云
             self.draw_word_picture(text_all)
             # 6.情感分析
-            emotion_analysis.emotional_analysis(self.BV,text_all)
-            # 7.本地保存弹幕文本，控制台输出弹幕
+            score=emotion_analysis.emotional_analysis(text_all)
+            # 7.绘情感得分图
+            self.draw_picture(score)
+            # 8.本地保存弹幕文本，控制台输出弹幕
             word_list = self.save_print_word(xml_bytes)
         # 番剧弹幕处理逻辑
         elif self.VideoType == "1":
